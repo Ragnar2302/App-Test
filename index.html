@@ -350,8 +350,14 @@
           <!-- options filled in via JS -->
         </select>
 
+        <div style="margin-top:6px; text-align:right;">
+          <button class="btn-secondary" id="preloadRoutineBtn">
+            ⚙ Preload routine into workout
+          </button>
+        </div>
+
         <label for="workoutLabel" style="margin-top:8px;">Workout label</label>
-        <input id="workoutLabel" placeholder="e.g. Back & Chest" />
+        <input id="workoutLabel" placeholder="e.g. Chest / Back" />
 
         <label for="workoutNotes" style="margin-top:8px;">Notes (optional)</label>
         <textarea id="workoutNotes" rows="2" placeholder="e.g. Felt strong, elbows a bit cranky on presses."></textarea>
@@ -474,7 +480,7 @@
 
   <script>
     // ---------- DATA + STORAGE ----------
-    const STORAGE_KEY = "ht_sessions_v2"; // bump version for new structure
+    const STORAGE_KEY = "ht_sessions_v2"; // versioned
 
     let sessions = loadSessions();
     let currentExercises = [];
@@ -495,41 +501,50 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
     }
 
-    // Preset routines (tweak these to your actual split)
+    // Preset routines (your actual split)
     const ROUTINES = [
       {
-        id: "back_chest",
-        name: "Back & Chest",
+        id: "chest_back",
+        name: "Chest / Back",
         exercises: [
-          "Fixed/Converging Pulldown",
-          "Incline Smith Press",
-          "Close Grip Chest Supported Row",
-          "Flat Machine Press",
-          "Chest Supported Row (Upper focus)",
+          "Chest Supported Row (Close Grip)",
+          "Incline Bench Press",
+          "Barbell Row",
+          "Flat Chest Press (Machine)",
+          "Lat Pulldown (Wide Grip)",
           "Pec Deck Fly",
-          "Lat Cable Pullover",
-          "Lower Chest Dips"
+          "Shrugs (Plate Loaded Machine)",
+          "Dips",
+          "Lat Pullovers (Cable)"
         ]
       },
       {
-        id: "legs",
-        name: "Legs",
+        id: "sharms",
+        name: "Sharms",
         exercises: [
-          "Pendulum Squat",
-          "Romanian Deadlift (RDL)",
-          "Adductor Machine",
+          "Shoulder Press (Pin-Loaded Machine)",
+          "Seated Lateral Raise (Machine)",
+          "Rear Delt Fly (Pec Deck)",
+          "Preacher Curl (Plate Loaded)",
+          "Tricep Pushdown (Single Hand)",
+          "Bicep Curl (Cable)",
+          "Tricep Ovh Extension",
+          "Reverse Curl (Cable)",
+          "Tricep Dip Machine (Pin Loaded)"
+        ]
+      },
+      {
+        id: "legs_core",
+        name: "Legs / Core",
+        exercises: [
+          "Pendulum Squat (Plate Loaded)",
+          "RDLs",
+          "Adductor (Machine)",
           "Leg Extension",
-          "Seated Leg Curl"
-        ]
-      },
-      {
-        id: "arms",
-        name: "Arms / Accessories",
-        exercises: [
-          "Cable Bicep Curl",
-          "Tricep Pushdown",
-          "Overhead Tricep Extension",
-          "Lateral Raise Machine"
+          "Hamstring Curl (Seated)",
+          "Hanging Leg Raise",
+          "Cable Crunches",
+          "Standing Core Twist (Cable)"
         ]
       },
       {
@@ -539,25 +554,39 @@
       }
     ];
 
-    // Exercise configs with compound vs isolation info
+    // Exercise configs – rep ranges + type + progression behaviour
     const exerciseConfigs = [
-      { name: "Incline Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Flat Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Fixed/Converging Pulldown", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Lat Pulldown", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Close Grip Chest Supported Row", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Chest Supported Row (Upper focus)", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Flat Machine Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Pendulum Squat", minReps: 6, maxReps: 10, weightStep: 5, minSets: 3, maxSets: 5, type: "compound" },
-      { name: "Romanian Deadlift (RDL)", minReps: 6, maxReps: 10, weightStep: 5, minSets: 2, maxSets: 4, type: "compound" },
-      { name: "Leg Press", minReps: 8, maxReps: 12, weightStep: 10, minSets: 2, maxSets: 5, type: "compound" },
-      { name: "Leg Extension", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
-      { name: "Seated Leg Curl", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
-      { name: "Pec Deck Fly", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
-      { name: "Lat Cable Pullover", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
-      { name: "Lower Chest Dips", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 1, maxSets: 3, type: "compound" },
-      { name: "Tricep Pushdown", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
-      { name: "Cable Bicep Curl", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" }
+      // Chest / Back day
+      { name: "Chest Supported Row (Close Grip)", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 5, type: "compound" },
+      { name: "Incline Bench Press",              minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 5, type: "compound" },
+      { name: "Barbell Row",                      minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 5, type: "compound" },
+      { name: "Flat Chest Press (Machine)",       minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 5, type: "compound" },
+      { name: "Lat Pulldown (Wide Grip)",         minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "compound" },
+      { name: "Pec Deck Fly",                     minReps: 8, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Shrugs (Plate Loaded Machine)",    minReps: 6, maxReps: 12, weightStep: 5,   minSets: 2, maxSets: 4, type: "compound" },
+      { name: "Dips",                             minReps: 8, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "compound" },
+      { name: "Lat Pullovers (Cable)",            minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+
+      // Sharms day
+      { name: "Shoulder Press (Pin-Loaded Machine)", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "compound" },
+      { name: "Seated Lateral Raise (Machine)",      minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Rear Delt Fly (Pec Deck)",            minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Preacher Curl (Plate Loaded)",        minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Tricep Pushdown (Single Hand)",       minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Bicep Curl (Cable)",                  minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 4, type: "isolation" },
+      { name: "Tricep Ovh Extension",                minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 4, type: "isolation" },
+      { name: "Reverse Curl (Cable)",                minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Tricep Dip Machine (Pin Loaded)",     minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "compound" },
+
+      // Legs / Core day
+      { name: "Pendulum Squat (Plate Loaded)",       minReps: 6, maxReps: 12, weightStep: 5,   minSets: 3, maxSets: 5, type: "compound" },
+      { name: "RDLs",                                minReps: 6, maxReps: 10, weightStep: 5,   minSets: 2, maxSets: 4, type: "compound" },
+      { name: "Adductor (Machine)",                  minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Leg Extension",                       minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 4, type: "isolation" },
+      { name: "Hamstring Curl (Seated)",             minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 3, maxSets: 4, type: "isolation" },
+      { name: "Hanging Leg Raise",                   minReps: 8, maxReps: 15, weightStep: 0,   minSets: 2, maxSets: 4, type: "core" },
+      { name: "Cable Crunches",                      minReps: 8, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "core" },
+      { name: "Standing Core Twist (Cable)",         minReps: 8, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "core" }
     ];
 
     function getConfigForExercise(name) {
@@ -584,6 +613,7 @@
     const workoutNotesInput = document.getElementById("workoutNotes");
     const routineSelect = document.getElementById("routineSelect");
     const routineHint = document.getElementById("routineHint");
+    const preloadRoutineBtn = document.getElementById("preloadRoutineBtn");
 
     const exerciseNameInput = document.getElementById("exerciseName");
     const weightInput = document.getElementById("weightInput");
@@ -638,7 +668,7 @@
         opt.textContent = r.name;
         routineSelect.appendChild(opt);
       });
-      routineSelect.value = "back_chest";
+      routineSelect.value = "chest_back";
       updateRoutineHint();
       routineSelect.addEventListener("change", updateRoutineHint);
     }
@@ -656,6 +686,23 @@
           "Preset exercises: " + routine.exercises.join(", ");
       }
     }
+
+    function preloadRoutineIntoWorkout() {
+      const routine = ROUTINES.find(r => r.id === routineSelect.value);
+      if (!routine || !routine.exercises.length) {
+        alert("This routine has no preset exercises (or is Custom).");
+        return;
+      }
+
+      currentExercises = routine.exercises.map(name => ({
+        name,
+        sets: []
+      }));
+      renderCurrentWorkout();
+      alert(`Preloaded routine: ${routine.name}`);
+    }
+
+    preloadRoutineBtn.addEventListener("click", preloadRoutineIntoWorkout);
 
     // ---------- REST TIMER ----------
     let restTimerId = null;
@@ -750,10 +797,18 @@
         return;
       }
 
-      currentExercises.push({
-        name,
-        sets: [...tempSets]
-      });
+      const existing = currentExercises.find(
+        ex => ex.name.toLowerCase() === name.toLowerCase()
+      );
+
+      if (existing) {
+        existing.sets = existing.sets.concat(tempSets);
+      } else {
+        currentExercises.push({
+          name,
+          sets: [...tempSets]
+        });
+      }
 
       exerciseNameInput.value = "";
       tempSets = [];
@@ -769,6 +824,12 @@
 
       currentWorkoutList.innerHTML = currentExercises
         .map(ex => {
+          if (!ex.sets.length) {
+            return `<div style="margin-bottom:8px;">
+              <strong>${ex.name}</strong><br/>
+              <span class="small" style="color:#64748b;">No sets logged yet.</span>
+            </div>`;
+          }
           const setsText = ex.sets
             .map(
               s => `${s.weight.toFixed(1)} kg × ${s.reps} (RIR ${s.rir})`
@@ -842,8 +903,7 @@
           }
         }
       }
-      // newest first
-      views.sort((a, b) => b.date - a.date);
+      views.sort((a, b) => b.date - a.date); // newest first
       return views;
     }
 
@@ -856,7 +916,6 @@
 
       const suggestions = [];
 
-      // unique exercise names
       const namesSet = new Set();
       sortedSessions.forEach(s =>
         s.exercises.forEach(e => namesSet.add(e.name))
@@ -893,19 +952,17 @@
           /(bad|off|pain|ache|hurt|tender|injured)/.test(n)
         ).length;
 
-        // Detect stall: no increase in dominant weight over last 3+ sessions
         let stalled = false;
         if (recent.length >= 3) {
           const weights = recent.map(r => dominantWeight(r.sets));
           const maxWeight = Math.max(...weights);
           const minWeight = Math.min(...weights);
-          stalled = maxWeight - minWeight < 1e-6; // basically flat
+          stalled = maxWeight - minWeight < 1e-6;
         }
 
         const fatigueFlag =
           stalled && (lastAvgRir <= 1 || negativeNotesCount >= 2);
 
-        // 1) Increase weight conditions
         const requireTwoTopSessions = config.type === "compound";
         let haveRequiredTopHistory = true;
         if (requireTwoTopSessions) {
@@ -922,6 +979,7 @@
             );
         }
 
+        // 1) Increase weight
         if (
           allSetsTop &&
           lastAvgRir >= 2 &&
@@ -968,7 +1026,7 @@
           continue;
         }
 
-        // 3) Increase sets (volume)
+        // 3) Increase sets
         if (
           allRecentEasy &&
           lastSetCount < config.maxSets &&
@@ -988,7 +1046,7 @@
           continue;
         }
 
-        // 4) Deload / hold (performance strain or bad notes / fatigue)
+        // 4) Deload / hold
         if (
           lastAvgReps < config.minReps ||
           lastAvgRir <= 0 ||
@@ -1134,7 +1192,6 @@
         })
         .join("");
 
-      // hook up delete buttons
       historyList.querySelectorAll("[data-delete-id]").forEach(btn => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-delete-id");
@@ -1318,7 +1375,6 @@
         }
       };
       reader.readAsText(file);
-      // reset input so the same file can be re-imported later if needed
       importFileInput.value = "";
     });
 
@@ -1337,3 +1393,4 @@
   </script>
 </body>
 </html>
+
