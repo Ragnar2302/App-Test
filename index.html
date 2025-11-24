@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hypertrophy Workout Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#4f46e5" />
+
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      color-scheme: dark light;
+      --primary: #4f46e5;
+      --bg: #0b1020;
+      --card: #111827;
+      --accent: #22c55e;
+      --text: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      background: linear-gradient(145deg, #020617 0, #020617ee 50%, #020617 100%);
+      border-radius: 18px;
+      border: 1px solid #1e293b;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .chip {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(79, 70, 229, 0.15);
+      border: 1px solid rgba(129, 140, 248, 0.5);
+      color: #a5b4fc;
+    }
+
+    .tabs {
+      display: flex;
+      border-radius: 999px;
+      background: #020617;
+      padding: 4px;
+      margin-bottom: 12px;
+      border: 1px solid #111827;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 6px 0;
+      font-size: 0.85rem;
+      border-radius: 999px;
+      cursor: pointer;
+      color: #9ca3af;
+      user-select: none;
+    }
+
+    .tab.active {
+      background: radial-gradient(circle at top left, #4f46e5, #1d293b);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.6);
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid rgba(30, 64, 175, 0.4);
+      margin-bottom: 10px;
+    }
+
+    .card h2 {
+      font-size: 0.95rem;
+      margin: 0 0 6px 0;
+    }
+
+    .card p {
+      font-size: 0.8rem;
+      margin: 0;
+      color: #9ca3af;
+    }
+
+    label {
+      font-size: 0.8rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.4);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #f9fafb;
+      box-shadow: 0 10px 20px rgba(79, 70, 229, 0.5);
+    }
+
+    .btn-secondary {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #1f2937;
+    }
+
+    .sets-list {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #a5b4fc;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #1e293b;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    .pill span {
+      margin-right: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .badge-inc {
+      background: rgba(22, 163, 74, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .badge-maintain {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.5);
+    }
+
+    .badge-deload {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(248, 113, 113, 0.5);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .small {
+      font-size: 0.78rem;
+    }
+
+    .footer {
+      text-align: right;
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title">Hypertrophy Tracker</div>
+        <div class="subtitle">Log, progress, and auto-get next steps</div>
+      </div>
+      <div class="chip">PWA · Offline</div>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="log">Log Workout</div>
+      <div class="tab" data-tab="progression">Progression</div>
+    </div>
+
+    <!-- LOG WORKOUT TAB -->
+    <div id="tab-log">
+      <div class="card">
+        <h2>Workout Details</h2>
+        <p>Name the session and add your exercises & sets.</p>
+        <label for="workoutLabel">Workout label</label>
+        <input id="workoutLabel" placeholder="e.g. Push, Back & Chest" />
+
+        <div class="hint">Example: “Back & Chest”, “Legs”, “Push”, “Pull”.</div>
+      </div>
+
+      <div class="card">
+        <h2>Add Exercise</h2>
+        <label for="exerciseName">Exercise</label>
+        <input id="exerciseName" placeholder="e.g. Incline Bench Press" />
+
+        <div class="row" style="margin-top: 8px;">
+          <div>
+            <label for="weightInput">Weight (kg)</label>
+            <input id="weightInput" type="number" step="0.5" />
+          </div>
+          <div>
+            <label for="repsInput">Reps</label>
+            <input id="repsInput" type="number" />
+          </div>
+          <div>
+            <label for="rirInput">RIR</label>
+            <input id="rirInput" type="number" value="2" />
+          </div>
+        </div>
+
+        <div style="margin-top: 8px; display:flex; justify-content: space-between; align-items:center;">
+          <button class="btn-secondary" id="addSetBtn">
+            ➕ Add Set
+          </button>
+          <div class="small" id="currentSetsLabel">No sets yet</div>
+        </div>
+
+        <div class="sets-list" id="setsList"></div>
+
+        <div style="margin-top: 10px; text-align:right;">
+          <button class="btn-primary" id="addExerciseBtn">
+            ✅ Add Exercise to Workout
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Current Workout</h2>
+        <div id="currentWorkoutList" class="small">
+          No exercises added yet.
+        </div>
+        <div style="margin-top: 10px; text-align:right;">
+          <button class="btn-primary" id="saveWorkoutBtn">
+            💾 Save Workout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESSION TAB -->
+    <div id="tab-progression" style="display:none;">
+      <div class="card">
+        <h2>Progression Rules (Summary)</h2>
+        <p>
+          Uses a simple hypertrophy-focused logic per exercise:
+        </p>
+        <ul class="small" style="padding-left: 18px; margin: 6px 0;">
+          <li>Top of rep range + RIR ≥ 2 → increase weight.</li>
+          <li>Mid rep range + decent RIR → push reps.</li>
+          <li>Several easy sessions + low sets → add a set.</li>
+          <li>Below range or grinding (RIR ≤ 0) → hold or deload.</li>
+        </ul>
+      </div>
+
+      <div id="suggestionsContainer"></div>
+    </div>
+
+    <div class="footer">
+      Data is stored locally on this device only (localStorage).
+    </div>
+  </div>
+
+  <script>
+    // ---------- DATA + STORAGE ----------
+    const STORAGE_KEY = "ht_sessions_v1";
+
+    let sessions = loadSessions();
+    let currentExercises = [];
+    let tempSets = []; // sets for the exercise currently being built
+
+    function loadSessions() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error("Failed to load sessions", e);
+        return [];
+      }
+    }
+
+    function saveSessions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    }
+
+    // Exercise configs – tweak to your liking
+    const exerciseConfigs = [
+      { name: "Incline Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5 },
+      { name: "Flat Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5 },
+      { name: "Lat Pulldown", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5 },
+      { name: "Chest Supported Row", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5 },
+      { name: "Squat", minReps: 6, maxReps: 10, weightStep: 5, minSets: 3, maxSets: 5 },
+      { name: "RDL", minReps: 6, maxReps: 10, weightStep: 5, minSets: 2, maxSets: 4 },
+      { name: "Leg Press", minReps: 8, maxReps: 12, weightStep: 10, minSets: 2, maxSets: 5 },
+      { name: "Tricep Pushdown", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4 },
+      { name: "Bicep Curl", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4 },
+    ];
+
+    function getConfigForExercise(name) {
+      return exerciseConfigs.find(
+        c => c.name.toLowerCase() === name.toLowerCase()
+      ) || {
+        name,
+        minReps: 6,
+        maxReps: 12,
+        weightStep: 2.5,
+        minSets: 2,
+        maxSets: 5,
+      };
+    }
+
+    // ---------- UI ELEMENTS ----------
+    const tabs = document.querySelectorAll(".tab");
+    const tabLog = document.getElementById("tab-log");
+    const tabProg = document.getElementById("tab-progression");
+
+    const workoutLabelInput = document.getElementById("workoutLabel");
+    const exerciseNameInput = document.getElementById("exerciseName");
+    const weightInput = document.getElementById("weightInput");
+    const repsInput = document.getElementById("repsInput");
+    const rirInput = document.getElementById("rirInput");
+    const addSetBtn = document.getElementById("addSetBtn");
+    const addExerciseBtn = document.getElementById("addExerciseBtn");
+    const saveWorkoutBtn = document.getElementById("saveWorkoutBtn");
+    const currentSetsLabel = document.getElementById("currentSetsLabel");
+    const setsList = document.getElementById("setsList");
+    const currentWorkoutList = document.getElementById("currentWorkoutList");
+    const suggestionsContainer = document.getElementById("suggestionsContainer");
+
+    // ---------- TAB SWITCHING ----------
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const tabName = tab.getAttribute("data-tab");
+        if (tabName === "log") {
+          tabLog.style.display = "";
+          tabProg.style.display = "none";
+        } else {
+          tabLog.style.display = "none";
+          tabProg.style.display = "";
+          renderSuggestions();
+        }
+      });
+    });
+
+    // ---------- ADD SET ----------
+    addSetBtn.addEventListener("click", () => {
+      const weight = parseFloat(weightInput.value);
+      const reps = parseInt(repsInput.value, 10);
+      const rir = parseInt(rirInput.value, 10);
+
+      if (isNaN(weight) || isNaN(reps)) {
+        alert("Enter valid weight and reps.");
+        return;
+      }
+
+      tempSets.push({ weight, reps, rir: isNaN(rir) ? 2 : rir });
+      weightInput.value = "";
+      repsInput.value = "";
+      updateTempSetsUI();
+    });
+
+    function updateTempSetsUI() {
+      if (tempSets.length === 0) {
+        currentSetsLabel.textContent = "No sets yet";
+        setsList.textContent = "";
+        return;
+      }
+
+      currentSetsLabel.textContent = `${tempSets.length} set(s) added`;
+      setsList.innerHTML = tempSets
+        .map(
+          (s, i) =>
+            `<div class="pill"><span>#${i + 1}</span> ${s.weight.toFixed(
+              1
+            )} kg × ${s.reps} (RIR ${s.rir})</div>`
+        )
+        .join("");
+    }
+
+    // ---------- ADD EXERCISE ----------
+    addExerciseBtn.addEventListener("click", () => {
+      const name = exerciseNameInput.value.trim();
+      if (!name) {
+        alert("Enter an exercise name.");
+        return;
+      }
+      if (tempSets.length === 0) {
+        alert("Add at least one set for this exercise.");
+        return;
+      }
+
+      currentExercises.push({
+        name,
+        sets: [...tempSets],
+      });
+
+      exerciseNameInput.value = "";
+      tempSets = [];
+      updateTempSetsUI();
+      renderCurrentWorkout();
+    });
+
+    function renderCurrentWorkout() {
+      if (currentExercises.length === 0) {
+        currentWorkoutList.textContent = "No exercises added yet.";
+        return;
+      }
+
+      currentWorkoutList.innerHTML = currentExercises
+        .map(ex => {
+          const setsText = ex.sets
+            .map(
+              s => `${s.weight.toFixed(1)} kg × ${s.reps} (RIR ${s.rir})`
+            )
+            .join("<br/>");
+          return `<div style="margin-bottom:8px;">
+              <strong>${ex.name}</strong><br/>
+              <span class="small">${setsText}</span>
+            </div>`;
+        })
+        .join("");
+    }
+
+    // ---------- SAVE WORKOUT ----------
+    saveWorkoutBtn.addEventListener("click", () => {
+      if (currentExercises.length === 0) {
+        alert("Add at least one exercise before saving.");
+        return;
+      }
+
+      const label = workoutLabelInput.value.trim() || "Untitled";
+      const session = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        label,
+        exercises: currentExercises,
+      };
+
+      sessions.push(session);
+      saveSessions();
+      currentExercises = [];
+      renderCurrentWorkout();
+      workoutLabelInput.value = "";
+      alert("Workout saved!");
+    });
+
+    // ---------- PROGRESSION ENGINE ----------
+    function average(arr) {
+      if (!arr.length) return 0;
+      return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+
+    function dominantWeight(sets) {
+      if (!sets.length) return 0;
+      const counts = {};
+      sets.forEach(s => {
+        const key = s.weight.toFixed(2);
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      return parseFloat(sorted[0][0]);
+    }
+
+    function extractExerciseHistory(sessionsArr, exerciseName) {
+      const views = [];
+      for (const session of sessionsArr) {
+        for (const ex of session.exercises) {
+          if (ex.name.toLowerCase() === exerciseName.toLowerCase()) {
+            views.push({
+              date: new Date(session.date),
+              sets: ex.sets,
+            });
+          }
+        }
+      }
+      // newest first
+      views.sort((a, b) => b.date - a.date);
+      return views;
+    }
+
+    function generateSuggestions() {
+      if (!sessions.length) return [];
+
+      // newest->oldest for consistency
+      const sortedSessions = [...sessions].sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      const suggestions = [];
+
+      // Find all distinct exercise names
+      const namesSet = new Set();
+      sortedSessions.forEach(s =>
+        s.exercises.forEach(e => namesSet.add(e.name))
+      );
+
+      for (const exerciseName of namesSet) {
+        const config = getConfigForExercise(exerciseName);
+        const history = extractExerciseHistory(sortedSessions, exerciseName);
+        if (!history.length) continue;
+
+        const recent = history.slice(0, 3);
+        const last = recent[0];
+        const lastAvgReps = average(last.sets.map(s => s.reps));
+        const lastAvgRir = average(last.sets.map(s => s.rir));
+        const lastSetCount = last.sets.length;
+        const lastWeight = dominantWeight(last.sets);
+
+        const allSetsTop =
+          last.sets.length > 0 &&
+          last.sets.every(
+            s =>
+              s.reps >= config.maxReps &&
+              s.rir >= 2 &&
+              Math.abs(s.weight - lastWeight) < 0.01
+          );
+
+        const allRecentEasy = recent.every(r => {
+          const avgRir = average(r.sets.map(s => s.rir));
+          return avgRir >= 2;
+        });
+
+        // 1) increase weight
+        if (allSetsTop) {
+          const newW = lastWeight + config.weightStep;
+          suggestions.push({
+            exerciseName,
+            type: "increaseWeight",
+            badge: "Increase Weight",
+            badgeClass: "badge-inc",
+            text: `All sets hit the top of your rep range (${config.maxReps}+) with decent RIR (~${lastAvgRir.toFixed(
+              1
+            )}). Increase weight to about ${newW.toFixed(
+              1
+            )} kg and work back down towards ${config.minReps} reps per set.`,
+          });
+          continue;
+        }
+
+        // 2) increase reps
+        if (
+          lastAvgReps >= config.minReps &&
+          lastAvgReps < config.maxReps &&
+          lastAvgRir >= 1
+        ) {
+          const targetReps = Math.min(config.maxReps, Math.round(lastAvgReps + 1));
+          suggestions.push({
+            exerciseName,
+            type: "increaseReps",
+            badge: "Increase Reps",
+            badgeClass: "badge-inc",
+            text: `You’re in range (avg ${lastAvgReps.toFixed(
+              1
+            )} reps, RIR ~${lastAvgRir.toFixed(
+              1
+            )}). Keep weight at ~${lastWeight.toFixed(
+              1
+            )} kg and aim for about ${targetReps} reps on most sets next session.`,
+          });
+          continue;
+        }
+
+        // 3) increase sets
+        if (
+          allRecentEasy &&
+          lastSetCount < config.maxSets &&
+          lastAvgReps >= config.minReps
+        ) {
+          const newSets = lastSetCount + 1;
+          suggestions.push({
+            exerciseName,
+            type: "increaseSets",
+            badge: "Increase Sets",
+            badgeClass: "badge-inc",
+            text: `Last few sessions look comfortable (good RIR, in rep range). Bump volume by adding a set: ${lastSetCount} → ${newSets} sets at ~${lastWeight.toFixed(
+              1
+            )} kg.`,
+          });
+          continue;
+        }
+
+        // 4) deload / hold
+        if (lastAvgReps < config.minReps || lastAvgRir <= 0) {
+          const newW = Math.max(0, lastWeight - config.weightStep);
+          const deloadText =
+            newW > 0
+              ? `Consider holding or dropping weight slightly to ~${newW.toFixed(
+                  1
+                )} kg and rebuilding solid, controlled reps.`
+              : `Consider reducing load slightly and focusing on clean technique and staying within ${config.minReps}–${config.maxReps} reps.`;
+          suggestions.push({
+            exerciseName,
+            type: "deload",
+            badge: "Deload / Hold",
+            badgeClass: "badge-deload",
+            text: `Below target reps (avg ${lastAvgReps.toFixed(
+              1
+            )}) or very close to failure (RIR ~${lastAvgRir.toFixed(
+              1
+            )}). ${deloadText}`,
+          });
+          continue;
+        }
+
+        // 5) maintain
+        suggestions.push({
+          exerciseName,
+          type: "maintain",
+          badge: "Maintain",
+          badgeClass: "badge-maintain",
+          text: `Mixed signals. Keep around ${lastWeight.toFixed(
+            1
+          )} kg, stay within ${config.minReps}–${config.maxReps} reps, and aim to improve either execution quality or a small rep increase next time.`,
+        });
+      }
+
+      return suggestions;
+    }
+
+    function renderSuggestions() {
+      suggestionsContainer.innerHTML = "";
+      if (!sessions.length) {
+        suggestionsContainer.innerHTML = `
+          <div class="card">
+            <p class="small">Log at least one workout to see progression suggestions.</p>
+          </div>`;
+        return;
+      }
+
+      const suggestions = generateSuggestions();
+      if (!suggestions.length) {
+        suggestionsContainer.innerHTML = `
+          <div class="card">
+            <p class="small">No suggestions yet. Log more sessions.</p>
+          </div>`;
+        return;
+      }
+
+      suggestions.forEach(s => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h2>
+            ${s.exerciseName}
+            <span class="badge ${s.badgeClass}" style="margin-left:6px;">
+              ${s.badge}
+            </span>
+          </h2>
+          <p class="small">${s.text}</p>
+        `;
+        suggestionsContainer.appendChild(card);
+      });
+    }
+
+    // Initial render of current workout (empty)
+    renderCurrentWorkout();
+
+    // ---------- PWA SERVICE WORKER ----------
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("sw.js")
+          .catch(err => console.error("SW registration failed", err));
+      });
+    }
+  </script>
+</body>
+</html>
