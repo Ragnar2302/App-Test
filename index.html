@@ -1,5 +1,3 @@
-<!-- v4 -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -352,9 +350,12 @@
           <!-- options filled in via JS -->
         </select>
 
-        <div style="margin-top:6px; text-align:right;">
+        <div style="margin-top:6px; display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap;">
           <button class="btn-secondary" id="preloadRoutineBtn">
-            ⚙ Preload routine into workout
+            ⚙ Preload routine
+          </button>
+          <button class="btn-primary" id="startWorkoutBtn">
+            ▶ Start Workout
           </button>
         </div>
 
@@ -369,6 +370,8 @@
 
       <div class="card">
         <h2><span class="icon">🏋</span>Add Exercise & Sets</h2>
+        <div id="activeExerciseLabel" class="small" style="margin-bottom:4px; color:#e5e7eb;"></div>
+
         <label for="exerciseName">Exercise</label>
         <input id="exerciseName" placeholder="e.g. Incline Bench Press" />
 
@@ -411,7 +414,7 @@
 
         <div style="margin-top: 10px; text-align:right;">
           <button class="btn-primary" id="addExerciseBtn">
-            ✅ Add Exercise to Workout
+            ✅ Add Exercise / Next
           </button>
         </div>
       </div>
@@ -487,6 +490,8 @@
     let sessions = loadSessions();
     let currentExercises = [];
     let tempSets = [];
+    let workoutStarted = false;
+    let activeExerciseIndex = 0;
 
     function loadSessions() {
       try {
@@ -616,6 +621,8 @@
     const routineSelect = document.getElementById("routineSelect");
     const routineHint = document.getElementById("routineHint");
     const preloadRoutineBtn = document.getElementById("preloadRoutineBtn");
+    const startWorkoutBtn = document.getElementById("startWorkoutBtn");
+    const activeExerciseLabel = document.getElementById("activeExerciseLabel");
 
     const exerciseNameInput = document.getElementById("exerciseName");
     const weightInput = document.getElementById("weightInput");
@@ -700,11 +707,66 @@
         name,
         sets: []
       }));
+
+      // Auto-label workout if empty
+      if (!workoutLabelInput.value) {
+        workoutLabelInput.value = routine.name;
+      }
+
+      workoutStarted = false;        // back to planning mode
+      activeExerciseIndex = 0;
       renderCurrentWorkout();
+      updateActiveExerciseUI();
       alert(`Preloaded routine: ${routine.name}`);
     }
 
     preloadRoutineBtn.addEventListener("click", preloadRoutineIntoWorkout);
+
+    // ---------- ACTIVE EXERCISE UI ----------
+    function updateActiveExerciseUI() {
+      if (!workoutStarted) {
+        if (!currentExercises.length) {
+          activeExerciseLabel.textContent =
+            "Manual mode: type an exercise name, or preload a routine then press Start Workout.";
+        } else {
+          activeExerciseLabel.textContent =
+            "Exercises loaded. Press Start Workout to step through one at a time, or log manually.";
+        }
+        exerciseNameInput.readOnly = false;
+        if (!exerciseNameInput.value) {
+          exerciseNameInput.placeholder = "e.g. Incline Bench Press";
+        }
+        return;
+      }
+
+      if (!currentExercises.length) {
+        activeExerciseLabel.textContent =
+          "No exercises in current workout. Preload a routine first.";
+        exerciseNameInput.readOnly = false;
+        return;
+      }
+
+      const ex = currentExercises[activeExerciseIndex];
+      activeExerciseLabel.textContent =
+        `Current: ${ex.name} (${activeExerciseIndex + 1} of ${currentExercises.length})`;
+
+      // In step-through mode, lock the exercise name field to this exercise
+      exerciseNameInput.value = ex.name;
+      exerciseNameInput.readOnly = true;
+      exerciseNameInput.placeholder = "";
+    }
+
+    startWorkoutBtn.addEventListener("click", () => {
+      if (!currentExercises.length) {
+        alert("Preload a routine first (or manually add exercises) before starting.");
+        return;
+      }
+      workoutStarted = true;
+      activeExerciseIndex = 0;
+      resetRestTimer();
+      updateActiveExerciseUI();
+      alert("Workout started. You'll step through each exercise one at a time.");
+    });
 
     // ---------- REST TIMER ----------
     let restTimerId = null;
@@ -787,7 +849,7 @@
       startRestTimer(); // start rest after logging set
     });
 
-    // ---------- ADD EXERCISE ----------
+    // ---------- ADD EXERCISE / STEP THROUGH ----------
     addExerciseBtn.addEventListener("click", () => {
       const name = exerciseNameInput.value.trim();
       if (!name) {
@@ -806,30 +868,83 @@
       if (existing) {
         existing.sets = existing.sets.concat(tempSets);
       } else {
+        // fallback/manual mode – new exercise not in preset
         currentExercises.push({
           name,
           sets: [...tempSets]
         });
       }
 
-      exerciseNameInput.value = "";
       tempSets = [];
       updateTempSetsUI();
       renderCurrentWorkout();
+
+      if (!workoutStarted) {
+        // manual / planning mode, stay on same view
+        exerciseNameInput.value = "";
+        updateActiveExerciseUI();
+        return;
+      }
+
+      // STEP-THROUGH MODE: move to next exercise or finish
+      if (activeExerciseIndex < currentExercises.length - 1) {
+        activeExerciseIndex++;
+        resetRestTimer();
+        updateActiveExerciseUI();
+      } else {
+        workoutStarted = false;
+        resetRestTimer();
+        updateActiveExerciseUI();
+        alert("Workout complete! Review the summary below and tap 'Save Workout' to store it.");
+      }
     });
 
     function renderCurrentWorkout() {
       if (currentExercises.length === 0) {
         currentWorkoutList.textContent = "No exercises added yet.";
+        updateActiveExerciseUI();
         return;
       }
 
+      // If workout is in progress, only show the current exercise + its sets as "current workout"
+      if (workoutStarted) {
+        const ex = currentExercises[activeExerciseIndex];
+        if (!ex.sets.length) {
+          currentWorkoutList.innerHTML = `
+            <div>
+              <strong>${ex.name}</strong><br/>
+              <span class="small" style="color:#64748b;">
+                No sets logged yet for this exercise. Log sets above, then press "Add Exercise / Next" to advance.
+              </span>
+            </div>
+          `;
+        } else {
+          const setsText = ex.sets
+            .map(
+              s => `${s.weight.toFixed(1)} kg × ${s.reps} (RIR ${s.rir})`
+            )
+            .join("<br/>");
+          currentWorkoutList.innerHTML = `
+            <div>
+              <strong>${ex.name}</strong><br/>
+              <span class="small">${setsText}</span><br/>
+              <span class="small" style="color:#64748b;">
+                Workout in progress – complete this exercise then press "Add Exercise / Next" to move on.
+              </span>
+            </div>
+          `;
+        }
+        updateActiveExerciseUI();
+        return;
+      }
+
+      // Workout not in progress: show full summary of all exercises
       currentWorkoutList.innerHTML = currentExercises
         .map(ex => {
           if (!ex.sets.length) {
             return `<div style="margin-bottom:8px;">
               <strong>${ex.name}</strong><br/>
-              <span class="small" style="color:#64748b;">No sets logged yet.</span>
+              <span class="small" style="color:#64748b;">No sets logged.</span>
             </div>`;
           }
           const setsText = ex.sets
@@ -843,6 +958,8 @@
             </div>`;
         })
         .join("");
+
+      updateActiveExerciseUI();
     }
 
     // ---------- SAVE WORKOUT ----------
@@ -870,6 +987,8 @@
       currentExercises = [];
       workoutLabelInput.value = "";
       workoutNotesInput.value = "";
+      workoutStarted = false;
+      activeExerciseIndex = 0;
       renderCurrentWorkout();
       resetRestTimer();
       alert("Workout saved!");
@@ -1383,6 +1502,7 @@
     // ---------- INIT ----------
     initRoutines();
     renderCurrentWorkout();
+    updateActiveExerciseUI();
 
     // ---------- SERVICE WORKER ----------
     if ("serviceWorker" in navigator) {
@@ -1395,4 +1515,3 @@
   </script>
 </body>
 </html>
-
