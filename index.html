@@ -1,30 +1,34 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Hypertrophy Workout Tracker</title>
+  <title>Brotherhood Hypertrophy Log</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- PWA manifest -->
   <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta name="theme-color" content="#0f172a" />
 
   <style>
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         sans-serif;
-      color-scheme: dark light;
-      --primary: #4f46e5;
-      --bg: #0b1020;
-      --card: #111827;
-      --accent: #22c55e;
+      color-scheme: dark;
+      --primary: #38bdf8;       /* Brotherhood blue */
+      --accent: #f97316;        /* Warning/orange */
+      --bg: #020617;
+      --card: #020617;
+      --border: #1e293b;
       --text: #e5e7eb;
+      --muted: #6b7280;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.18) 0, transparent 45%),
+        radial-gradient(circle at bottom, rgba(15,23,42,1) 0, #020617 45%);
       color: var(--text);
       display: flex;
       justify-content: center;
@@ -33,11 +37,11 @@
 
     .app {
       width: 100%;
-      max-width: 480px;
-      background: linear-gradient(145deg, #020617 0, #020617ee 50%, #020617 100%);
+      max-width: 520px;
+      background: linear-gradient(145deg, rgba(15,23,42,0.96), #020617);
       border-radius: 18px;
-      border: 1px solid #1e293b;
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(15,23,42,0.9);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8);
       padding: 16px;
       box-sizing: border-box;
     }
@@ -47,25 +51,37 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
+      gap: 10px;
     }
 
     .title {
       font-size: 1.1rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
 
     .subtitle {
-      font-size: 0.8rem;
-      color: #9ca3af;
+      font-size: 0.78rem;
+      color: var(--muted);
     }
 
     .chip {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       padding: 4px 8px;
       border-radius: 999px;
-      background: rgba(79, 70, 229, 0.15);
-      border: 1px solid rgba(129, 140, 248, 0.5);
-      color: #a5b4fc;
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.25), rgba(15,23,42,1));
+      border: 1px solid rgba(56,189,248,0.6);
+      color: #e0f2fe;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .chip::before {
+      content: "⚙";
+      font-size: 0.8rem;
     }
 
     .tabs {
@@ -89,23 +105,31 @@
     }
 
     .tab.active {
-      background: radial-gradient(circle at top left, #4f46e5, #1d293b);
+      background: radial-gradient(circle at top left, var(--primary), #1e293b);
       color: white;
       font-weight: 600;
-      box-shadow: 0 0 12px rgba(79, 70, 229, 0.6);
+      box-shadow: 0 0 12px rgba(56,189,248,0.5);
     }
 
     .card {
-      background: rgba(15, 23, 42, 0.9);
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.06), rgba(15,23,42,0.98));
       border-radius: 14px;
       padding: 12px;
-      border: 1px solid rgba(30, 64, 175, 0.4);
+      border: 1px solid rgba(30,64,175,0.6);
       margin-bottom: 10px;
     }
 
     .card h2 {
       font-size: 0.95rem;
       margin: 0 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card h2 span.icon {
+      font-size: 0.9rem;
+      opacity: 0.9;
     }
 
     .card p {
@@ -115,26 +139,27 @@
     }
 
     label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       display: block;
       margin-bottom: 4px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 7px 9px;
       border-radius: 8px;
       border: 1px solid #1f2937;
       background: #020617;
-      color: #e5e7eb;
+      color: var(--text);
       font-size: 0.85rem;
       box-sizing: border-box;
       outline: none;
+      resize: vertical;
     }
 
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.4);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.4);
     }
 
     .row {
@@ -150,7 +175,7 @@
       border: none;
       border-radius: 999px;
       padding: 8px 14px;
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -158,15 +183,21 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      background: linear-gradient(135deg, var(--primary), #0ea5e9);
       color: #f9fafb;
-      box-shadow: 0 10px 20px rgba(79, 70, 229, 0.5);
+      box-shadow: 0 10px 20px rgba(56,189,248,0.5);
     }
 
     .btn-secondary {
       background: #020617;
       color: #e5e7eb;
       border: 1px solid #1f2937;
+    }
+
+    .btn-danger {
+      background: rgba(239,68,68,0.08);
+      color: #fca5a5;
+      border: 1px solid rgba(248,113,113,0.6);
     }
 
     .sets-list {
@@ -181,7 +212,7 @@
       padding: 3px 7px;
       border-radius: 999px;
       font-size: 0.75rem;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15,23,42,0.9);
       border: 1px solid #1e293b;
       margin-right: 4px;
       margin-bottom: 4px;
@@ -200,26 +231,26 @@
     }
 
     .badge-inc {
-      background: rgba(22, 163, 74, 0.15);
+      background: rgba(34,197,94,0.15);
       color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.5);
+      border: 1px solid rgba(34,197,94,0.5);
     }
 
     .badge-maintain {
-      background: rgba(59, 130, 246, 0.15);
+      background: rgba(59,130,246,0.12);
       color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.5);
+      border: 1px solid rgba(59,130,246,0.5);
     }
 
     .badge-deload {
-      background: rgba(239, 68, 68, 0.15);
+      background: rgba(239,68,68,0.15);
       color: #fca5a5;
-      border: 1px solid rgba(248, 113, 113, 0.5);
+      border: 1px solid rgba(248,113,113,0.6);
     }
 
     .hint {
       font-size: 0.75rem;
-      color: #6b7280;
+      color: var(--muted);
       margin-top: 4px;
     }
 
@@ -230,41 +261,110 @@
     .footer {
       text-align: right;
       font-size: 0.7rem;
-      color: #6b7280;
+      color: var(--muted);
       margin-top: 4px;
     }
+
+    .history-item {
+      border-top: 1px solid rgba(15,23,42,0.9);
+      padding-top: 6px;
+      margin-top: 6px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .history-meta {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .history-notes {
+      margin-top: 4px;
+      font-size: 0.76rem;
+      color: #e5e7eb;
+    }
+
+    .rest-timer {
+      font-size: 0.82rem;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .rest-display {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #1e293b;
+      background: rgba(15,23,42,0.9);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .rest-display.active {
+      border-color: var(--accent);
+      color: #fed7aa;
+      box-shadow: 0 0 8px rgba(248,150,30,0.5);
+    }
+
+    canvas {
+      max-width: 100%;
+    }
   </style>
+
+  <!-- Chart.js for lightweight charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="app">
     <header>
       <div>
-        <div class="title">Hypertrophy Tracker</div>
-        <div class="subtitle">Log, progress, and auto-get next steps</div>
+        <div class="title">Brotherhood Hypertrophy Log</div>
+        <div class="subtitle">Field workout log & auto-progression (BoS style)</div>
       </div>
-      <div class="chip">PWA · Offline</div>
+      <div class="chip">BoS Field Record</div>
     </header>
 
     <div class="tabs">
       <div class="tab active" data-tab="log">Log Workout</div>
       <div class="tab" data-tab="progression">Progression</div>
+      <div class="tab" data-tab="history">History & Charts</div>
     </div>
 
     <!-- LOG WORKOUT TAB -->
     <div id="tab-log">
       <div class="card">
-        <h2>Workout Details</h2>
-        <p>Name the session and add your exercises & sets.</p>
-        <label for="workoutLabel">Workout label</label>
-        <input id="workoutLabel" placeholder="e.g. Push, Back & Chest" />
+        <h2><span class="icon">📋</span>Workout Details</h2>
+        <p>Name the session, pick a routine, and log how it felt.</p>
 
-        <div class="hint">Example: “Back & Chest”, “Legs”, “Push”, “Pull”.</div>
+        <label for="routineSelect">Routine preset</label>
+        <select id="routineSelect">
+          <!-- options filled in via JS -->
+        </select>
+
+        <label for="workoutLabel" style="margin-top:8px;">Workout label</label>
+        <input id="workoutLabel" placeholder="e.g. Back & Chest" />
+
+        <label for="workoutNotes" style="margin-top:8px;">Notes (optional)</label>
+        <textarea id="workoutNotes" rows="2" placeholder="e.g. Felt strong, elbows a bit cranky on presses."></textarea>
+
+        <div class="hint">Notes feed into progression logic (frequent “bad / pain / off” notes = more conservative suggestions).</div>
       </div>
 
       <div class="card">
-        <h2>Add Exercise</h2>
+        <h2><span class="icon">🏋</span>Add Exercise & Sets</h2>
         <label for="exerciseName">Exercise</label>
         <input id="exerciseName" placeholder="e.g. Incline Bench Press" />
+
+        <div class="hint small" id="routineHint"></div>
 
         <div class="row" style="margin-top: 8px;">
           <div>
@@ -281,9 +381,20 @@
           </div>
         </div>
 
-        <div style="margin-top: 8px; display:flex; justify-content: space-between; align-items:center;">
+        <div class="row" style="margin-top:8px; align-items:center;">
+          <div>
+            <label for="restDurationInput">Rest timer (seconds)</label>
+            <input id="restDurationInput" type="number" value="120" />
+          </div>
+          <div class="rest-timer">
+            <div id="restDisplay" class="rest-display">Ready</div>
+            <button class="btn-secondary" id="restResetBtn">⏹ Reset</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; display:flex; justify-content: space-between; align-items:center;">
           <button class="btn-secondary" id="addSetBtn">
-            ➕ Add Set
+            ➕ Log Set & Start Rest
           </button>
           <div class="small" id="currentSetsLabel">No sets yet</div>
         </div>
@@ -298,7 +409,7 @@
       </div>
 
       <div class="card">
-        <h2>Current Workout</h2>
+        <h2><span class="icon">📦</span>Current Workout</h2>
         <div id="currentWorkoutList" class="small">
           No exercises added yet.
         </div>
@@ -313,33 +424,61 @@
     <!-- PROGRESSION TAB -->
     <div id="tab-progression" style="display:none;">
       <div class="card">
-        <h2>Progression Rules (Summary)</h2>
+        <h2><span class="icon">📈</span>Progression Rules (Bro-Science Refined)</h2>
         <p>
-          Uses a simple hypertrophy-focused logic per exercise:
+          Hypertrophy-focused, with compound vs isolation logic and fatigue awareness:
         </p>
         <ul class="small" style="padding-left: 18px; margin: 6px 0;">
-          <li>Top of rep range + RIR ≥ 2 → increase weight.</li>
+          <li>Hit top of rep range with RIR ≥ 2 (twice in a row for compounds) → increase weight.</li>
           <li>Mid rep range + decent RIR → push reps.</li>
-          <li>Several easy sessions + low sets → add a set.</li>
-          <li>Below range or grinding (RIR ≤ 0) → hold or deload.</li>
+          <li>Several easy sessions + low sets → add a set (more volume).</li>
+          <li>Below range or grinding (RIR ≤ 0), or repeated “bad/pain” notes → hold or deload.</li>
+          <li>Stalled performance for multiple sessions → flag fatigue and suggest deload/maintenance.</li>
         </ul>
       </div>
 
       <div id="suggestionsContainer"></div>
     </div>
 
+    <!-- HISTORY & CHARTS TAB -->
+    <div id="tab-history" style="display:none;">
+      <div class="card">
+        <h2><span class="icon">📜</span>Workout History</h2>
+        <p class="small">Review, delete, and sanity check your logs.</p>
+        <div id="historyList" class="small" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="icon">📊</span>Exercise Charts</h2>
+        <label for="chartExerciseSelect">Exercise</label>
+        <select id="chartExerciseSelect"></select>
+        <div class="hint">Shows top working-set weight per session over time.</div>
+        <canvas id="exerciseChart" height="140" style="margin-top:8px;"></canvas>
+      </div>
+
+      <div class="card">
+        <h2><span class="icon">💾</span>Data Backup</h2>
+        <p class="small">Export your logs as JSON, or import them later / on another device.</p>
+        <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">
+          <button class="btn-secondary" id="exportBtn">⬇ Export JSON</button>
+          <button class="btn-secondary" id="importBtn">⬆ Import JSON</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none;" />
+        </div>
+      </div>
+    </div>
+
     <div class="footer">
-      Data is stored locally on this device only (localStorage).
+      Data stored locally (this device only). Brotherhood-approved privacy.
     </div>
   </div>
 
   <script>
     // ---------- DATA + STORAGE ----------
-    const STORAGE_KEY = "ht_sessions_v1";
+    const STORAGE_KEY = "ht_sessions_v2"; // bump version for new structure
 
     let sessions = loadSessions();
     let currentExercises = [];
-    let tempSets = []; // sets for the exercise currently being built
+    let tempSets = [];
 
     function loadSessions() {
       try {
@@ -356,17 +495,69 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
     }
 
-    // Exercise configs – tweak to your liking
+    // Preset routines (tweak these to your actual split)
+    const ROUTINES = [
+      {
+        id: "back_chest",
+        name: "Back & Chest",
+        exercises: [
+          "Fixed/Converging Pulldown",
+          "Incline Smith Press",
+          "Close Grip Chest Supported Row",
+          "Flat Machine Press",
+          "Chest Supported Row (Upper focus)",
+          "Pec Deck Fly",
+          "Lat Cable Pullover",
+          "Lower Chest Dips"
+        ]
+      },
+      {
+        id: "legs",
+        name: "Legs",
+        exercises: [
+          "Pendulum Squat",
+          "Romanian Deadlift (RDL)",
+          "Adductor Machine",
+          "Leg Extension",
+          "Seated Leg Curl"
+        ]
+      },
+      {
+        id: "arms",
+        name: "Arms / Accessories",
+        exercises: [
+          "Cable Bicep Curl",
+          "Tricep Pushdown",
+          "Overhead Tricep Extension",
+          "Lateral Raise Machine"
+        ]
+      },
+      {
+        id: "custom",
+        name: "Custom / Freestyle",
+        exercises: []
+      }
+    ];
+
+    // Exercise configs with compound vs isolation info
     const exerciseConfigs = [
-      { name: "Incline Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5 },
-      { name: "Flat Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5 },
-      { name: "Lat Pulldown", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5 },
-      { name: "Chest Supported Row", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5 },
-      { name: "Squat", minReps: 6, maxReps: 10, weightStep: 5, minSets: 3, maxSets: 5 },
-      { name: "RDL", minReps: 6, maxReps: 10, weightStep: 5, minSets: 2, maxSets: 4 },
-      { name: "Leg Press", minReps: 8, maxReps: 12, weightStep: 10, minSets: 2, maxSets: 5 },
-      { name: "Tricep Pushdown", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4 },
-      { name: "Bicep Curl", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4 },
+      { name: "Incline Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Flat Bench Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Fixed/Converging Pulldown", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Lat Pulldown", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Close Grip Chest Supported Row", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Chest Supported Row (Upper focus)", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Flat Machine Press", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Pendulum Squat", minReps: 6, maxReps: 10, weightStep: 5, minSets: 3, maxSets: 5, type: "compound" },
+      { name: "Romanian Deadlift (RDL)", minReps: 6, maxReps: 10, weightStep: 5, minSets: 2, maxSets: 4, type: "compound" },
+      { name: "Leg Press", minReps: 8, maxReps: 12, weightStep: 10, minSets: 2, maxSets: 5, type: "compound" },
+      { name: "Leg Extension", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Seated Leg Curl", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Pec Deck Fly", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Lat Cable Pullover", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Lower Chest Dips", minReps: 6, maxReps: 10, weightStep: 2.5, minSets: 1, maxSets: 3, type: "compound" },
+      { name: "Tricep Pushdown", minReps: 10, maxReps: 15, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" },
+      { name: "Cable Bicep Curl", minReps: 8, maxReps: 12, weightStep: 2.5, minSets: 2, maxSets: 4, type: "isolation" }
     ];
 
     function getConfigForExercise(name) {
@@ -379,6 +570,7 @@
         weightStep: 2.5,
         minSets: 2,
         maxSets: 5,
+        type: "unknown"
       };
     }
 
@@ -386,19 +578,36 @@
     const tabs = document.querySelectorAll(".tab");
     const tabLog = document.getElementById("tab-log");
     const tabProg = document.getElementById("tab-progression");
+    const tabHistory = document.getElementById("tab-history");
 
     const workoutLabelInput = document.getElementById("workoutLabel");
+    const workoutNotesInput = document.getElementById("workoutNotes");
+    const routineSelect = document.getElementById("routineSelect");
+    const routineHint = document.getElementById("routineHint");
+
     const exerciseNameInput = document.getElementById("exerciseName");
     const weightInput = document.getElementById("weightInput");
     const repsInput = document.getElementById("repsInput");
     const rirInput = document.getElementById("rirInput");
+    const restDurationInput = document.getElementById("restDurationInput");
     const addSetBtn = document.getElementById("addSetBtn");
     const addExerciseBtn = document.getElementById("addExerciseBtn");
     const saveWorkoutBtn = document.getElementById("saveWorkoutBtn");
     const currentSetsLabel = document.getElementById("currentSetsLabel");
     const setsList = document.getElementById("setsList");
     const currentWorkoutList = document.getElementById("currentWorkoutList");
+
+    const restDisplay = document.getElementById("restDisplay");
+    const restResetBtn = document.getElementById("restResetBtn");
+
     const suggestionsContainer = document.getElementById("suggestionsContainer");
+    const historyList = document.getElementById("historyList");
+
+    const chartExerciseSelect = document.getElementById("chartExerciseSelect");
+    const exportBtn = document.getElementById("exportBtn");
+    const importBtn = document.getElementById("importBtn");
+    const importFileInput = document.getElementById("importFile");
+    let exerciseChart = null;
 
     // ---------- TAB SWITCHING ----------
     tabs.forEach(tab => {
@@ -407,34 +616,93 @@
         tab.classList.add("active");
 
         const tabName = tab.getAttribute("data-tab");
-        if (tabName === "log") {
-          tabLog.style.display = "";
-          tabProg.style.display = "none";
-        } else {
-          tabLog.style.display = "none";
-          tabProg.style.display = "";
+        tabLog.style.display = tabName === "log" ? "" : "none";
+        tabProg.style.display = tabName === "progression" ? "" : "none";
+        tabHistory.style.display = tabName === "history" ? "" : "none";
+
+        if (tabName === "progression") {
           renderSuggestions();
+        } else if (tabName === "history") {
+          renderHistory();
+          buildChartExerciseOptions();
+          renderChart();
         }
       });
     });
 
-    // ---------- ADD SET ----------
-    addSetBtn.addEventListener("click", () => {
-      const weight = parseFloat(weightInput.value);
-      const reps = parseInt(repsInput.value, 10);
-      const rir = parseInt(rirInput.value, 10);
+    // ---------- ROUTINES ----------
+    function initRoutines() {
+      ROUTINES.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.id;
+        opt.textContent = r.name;
+        routineSelect.appendChild(opt);
+      });
+      routineSelect.value = "back_chest";
+      updateRoutineHint();
+      routineSelect.addEventListener("change", updateRoutineHint);
+    }
 
-      if (isNaN(weight) || isNaN(reps)) {
-        alert("Enter valid weight and reps.");
+    function updateRoutineHint() {
+      const routine = ROUTINES.find(r => r.id === routineSelect.value);
+      if (!routine) {
+        routineHint.textContent = "";
         return;
       }
+      if (routine.exercises.length === 0) {
+        routineHint.textContent = "Custom / Freestyle – manually enter exercises.";
+      } else {
+        routineHint.textContent =
+          "Preset exercises: " + routine.exercises.join(", ");
+      }
+    }
 
-      tempSets.push({ weight, reps, rir: isNaN(rir) ? 2 : rir });
-      weightInput.value = "";
-      repsInput.value = "";
-      updateTempSetsUI();
-    });
+    // ---------- REST TIMER ----------
+    let restTimerId = null;
+    let restRemaining = 0;
 
+    function formatSeconds(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    }
+
+    function startRestTimer() {
+      const duration = parseInt(restDurationInput.value, 10);
+      if (isNaN(duration) || duration <= 0) {
+        restDisplay.textContent = "Timer off";
+        restDisplay.classList.remove("active");
+        return;
+      }
+      if (restTimerId) clearInterval(restTimerId);
+      restRemaining = duration;
+      restDisplay.classList.add("active");
+      restDisplay.textContent = formatSeconds(restRemaining);
+
+      restTimerId = setInterval(() => {
+        restRemaining--;
+        if (restRemaining <= 0) {
+          clearInterval(restTimerId);
+          restTimerId = null;
+          restDisplay.textContent = "REST OVER";
+          restDisplay.classList.add("active");
+        } else {
+          restDisplay.textContent = formatSeconds(restRemaining);
+        }
+      }, 1000);
+    }
+
+    function resetRestTimer() {
+      if (restTimerId) clearInterval(restTimerId);
+      restTimerId = null;
+      restRemaining = 0;
+      restDisplay.textContent = "Ready";
+      restDisplay.classList.remove("active");
+    }
+
+    restResetBtn.addEventListener("click", resetRestTimer);
+
+    // ---------- TEMP SETS ----------
     function updateTempSetsUI() {
       if (tempSets.length === 0) {
         currentSetsLabel.textContent = "No sets yet";
@@ -453,6 +721,23 @@
         .join("");
     }
 
+    addSetBtn.addEventListener("click", () => {
+      const weight = parseFloat(weightInput.value);
+      const reps = parseInt(repsInput.value, 10);
+      const rir = parseInt(rirInput.value, 10);
+
+      if (isNaN(weight) || isNaN(reps)) {
+        alert("Enter valid weight and reps.");
+        return;
+      }
+
+      tempSets.push({ weight, reps, rir: isNaN(rir) ? 2 : rir });
+      weightInput.value = "";
+      repsInput.value = "";
+      updateTempSetsUI();
+      startRestTimer(); // start rest after logging set
+    });
+
     // ---------- ADD EXERCISE ----------
     addExerciseBtn.addEventListener("click", () => {
       const name = exerciseNameInput.value.trim();
@@ -467,7 +752,7 @@
 
       currentExercises.push({
         name,
-        sets: [...tempSets],
+        sets: [...tempSets]
       });
 
       exerciseNameInput.value = "";
@@ -505,18 +790,25 @@
       }
 
       const label = workoutLabelInput.value.trim() || "Untitled";
+      const notes = workoutNotesInput.value.trim();
+      const routineId = routineSelect.value;
+
       const session = {
         id: Date.now().toString(),
         date: new Date().toISOString(),
         label,
-        exercises: currentExercises,
+        routineId,
+        notes,
+        exercises: currentExercises
       };
 
       sessions.push(session);
       saveSessions();
       currentExercises = [];
-      renderCurrentWorkout();
       workoutLabelInput.value = "";
+      workoutNotesInput.value = "";
+      renderCurrentWorkout();
+      resetRestTimer();
       alert("Workout saved!");
     });
 
@@ -545,6 +837,7 @@
             views.push({
               date: new Date(session.date),
               sets: ex.sets,
+              notes: session.notes || ""
             });
           }
         }
@@ -557,14 +850,13 @@
     function generateSuggestions() {
       if (!sessions.length) return [];
 
-      // newest->oldest for consistency
       const sortedSessions = [...sessions].sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
 
       const suggestions = [];
 
-      // Find all distinct exercise names
+      // unique exercise names
       const namesSet = new Set();
       sortedSessions.forEach(s =>
         s.exercises.forEach(e => namesSet.add(e.name))
@@ -575,7 +867,7 @@
         const history = extractExerciseHistory(sortedSessions, exerciseName);
         if (!history.length) continue;
 
-        const recent = history.slice(0, 3);
+        const recent = history.slice(0, 5);
         const last = recent[0];
         const lastAvgReps = average(last.sets.map(s => s.reps));
         const lastAvgRir = average(last.sets.map(s => s.rir));
@@ -596,28 +888,68 @@
           return avgRir >= 2;
         });
 
-        // 1) increase weight
-        if (allSetsTop) {
+        const recentNotes = recent.map(r => (r.notes || "").toLowerCase());
+        const negativeNotesCount = recentNotes.filter(n =>
+          /(bad|off|pain|ache|hurt|tender|injured)/.test(n)
+        ).length;
+
+        // Detect stall: no increase in dominant weight over last 3+ sessions
+        let stalled = false;
+        if (recent.length >= 3) {
+          const weights = recent.map(r => dominantWeight(r.sets));
+          const maxWeight = Math.max(...weights);
+          const minWeight = Math.min(...weights);
+          stalled = maxWeight - minWeight < 1e-6; // basically flat
+        }
+
+        const fatigueFlag =
+          stalled && (lastAvgRir <= 1 || negativeNotesCount >= 2);
+
+        // 1) Increase weight conditions
+        const requireTwoTopSessions = config.type === "compound";
+        let haveRequiredTopHistory = true;
+        if (requireTwoTopSessions) {
+          const lastTwo = history.slice(0, 2);
+          haveRequiredTopHistory =
+            lastTwo.length === 2 &&
+            lastTwo.every(h =>
+              h.sets.every(
+                s =>
+                  s.reps >= config.maxReps &&
+                  s.rir >= 2 &&
+                  Math.abs(s.weight - dominantWeight(h.sets)) < 0.01
+              )
+            );
+        }
+
+        if (
+          allSetsTop &&
+          lastAvgRir >= 2 &&
+          negativeNotesCount === 0 &&
+          (!requireTwoTopSessions || haveRequiredTopHistory)
+        ) {
           const newW = lastWeight + config.weightStep;
           suggestions.push({
             exerciseName,
             type: "increaseWeight",
             badge: "Increase Weight",
             badgeClass: "badge-inc",
-            text: `All sets hit the top of your rep range (${config.maxReps}+) with decent RIR (~${lastAvgRir.toFixed(
+            text: `${config.type === "compound" ? "Compound lift" : "Isolation"} is cruising. All sets at top of rep range (${config.maxReps}+) with good RIR (~${lastAvgRir.toFixed(
               1
-            )}). Increase weight to about ${newW.toFixed(
+            )}) and no bad notes. Bump to about ${newW.toFixed(
               1
-            )} kg and work back down towards ${config.minReps} reps per set.`,
+            )} kg and work back to ${config.minReps} reps per set.`
           });
           continue;
         }
 
-        // 2) increase reps
+        // 2) Increase reps
         if (
           lastAvgReps >= config.minReps &&
           lastAvgReps < config.maxReps &&
-          lastAvgRir >= 1
+          lastAvgRir >= 1 &&
+          negativeNotesCount <= 1 &&
+          !fatigueFlag
         ) {
           const targetReps = Math.min(config.maxReps, Math.round(lastAvgReps + 1));
           suggestions.push({
@@ -625,22 +957,23 @@
             type: "increaseReps",
             badge: "Increase Reps",
             badgeClass: "badge-inc",
-            text: `You’re in range (avg ${lastAvgReps.toFixed(
+            text: `Solid working zone (avg ${lastAvgReps.toFixed(
               1
             )} reps, RIR ~${lastAvgRir.toFixed(
               1
-            )}). Keep weight at ~${lastWeight.toFixed(
+            )}). Hold at ~${lastWeight.toFixed(
               1
-            )} kg and aim for about ${targetReps} reps on most sets next session.`,
+            )} kg and aim for about ${targetReps} reps on most sets next time.`
           });
           continue;
         }
 
-        // 3) increase sets
+        // 3) Increase sets (volume)
         if (
           allRecentEasy &&
           lastSetCount < config.maxSets &&
-          lastAvgReps >= config.minReps
+          lastAvgReps >= config.minReps &&
+          !fatigueFlag
         ) {
           const newSets = lastSetCount + 1;
           suggestions.push({
@@ -648,45 +981,61 @@
             type: "increaseSets",
             badge: "Increase Sets",
             badgeClass: "badge-inc",
-            text: `Last few sessions look comfortable (good RIR, in rep range). Bump volume by adding a set: ${lastSetCount} → ${newSets} sets at ~${lastWeight.toFixed(
+            text: `Multiple easy sessions in-range with good RIR. Increase volume: go from ${lastSetCount} → ${newSets} sets at ~${lastWeight.toFixed(
               1
-            )} kg.`,
+            )} kg for extra hypertrophy stimulus.`
           });
           continue;
         }
 
-        // 4) deload / hold
-        if (lastAvgReps < config.minReps || lastAvgRir <= 0) {
+        // 4) Deload / hold (performance strain or bad notes / fatigue)
+        if (
+          lastAvgReps < config.minReps ||
+          lastAvgRir <= 0 ||
+          negativeNotesCount >= 2 ||
+          fatigueFlag
+        ) {
           const newW = Math.max(0, lastWeight - config.weightStep);
+          let reason = "";
+          if (lastAvgReps < config.minReps) {
+            reason += `Below target reps (avg ${lastAvgReps.toFixed(1)}). `;
+          }
+          if (lastAvgRir <= 0) {
+            reason += `Training to failure or beyond (RIR ~${lastAvgRir.toFixed(1)}). `;
+          }
+          if (negativeNotesCount >= 2) {
+            reason += `Multiple recent sessions logged as "bad/off/pain". `;
+          }
+          if (fatigueFlag) {
+            reason += `Performance has stalled for several sessions, likely fatigue. `;
+          }
+
           const deloadText =
             newW > 0
-              ? `Consider holding or dropping weight slightly to ~${newW.toFixed(
+              ? `Drop to around ${newW.toFixed(
                   1
-                )} kg and rebuilding solid, controlled reps.`
-              : `Consider reducing load slightly and focusing on clean technique and staying within ${config.minReps}–${config.maxReps} reps.`;
+                )} kg or maintain current load but cap sets and stay well within ${config.minReps}–${config.maxReps} with 1–3 RIR.`
+              : `Reduce load slightly and keep technique clean within ${config.minReps}–${config.maxReps} reps and 1–3 RIR.`;
+
           suggestions.push({
             exerciseName,
             type: "deload",
             badge: "Deload / Hold",
             badgeClass: "badge-deload",
-            text: `Below target reps (avg ${lastAvgReps.toFixed(
-              1
-            )}) or very close to failure (RIR ~${lastAvgRir.toFixed(
-              1
-            )}). ${deloadText}`,
+            text: `${reason}${deloadText}`
           });
           continue;
         }
 
-        // 5) maintain
+        // 5) Maintain
         suggestions.push({
           exerciseName,
           type: "maintain",
           badge: "Maintain",
           badgeClass: "badge-maintain",
-          text: `Mixed signals. Keep around ${lastWeight.toFixed(
+          text: `Mixed signals. Stay around ${lastWeight.toFixed(
             1
-          )} kg, stay within ${config.minReps}–${config.maxReps} reps, and aim to improve either execution quality or a small rep increase next time.`,
+          )} kg, keep ${config.minReps}–${config.maxReps} reps, 1–3 RIR, and focus on clean execution. If performance climbs or notes improve, we’ll push load or volume.`
         });
       }
 
@@ -716,11 +1065,8 @@
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
-          <h2>
-            ${s.exerciseName}
-            <span class="badge ${s.badgeClass}" style="margin-left:6px;">
-              ${s.badge}
-            </span>
+          <h2>${s.exerciseName}
+            <span class="badge ${s.badgeClass}" style="margin-left:6px;">${s.badge}</span>
           </h2>
           <p class="small">${s.text}</p>
         `;
@@ -728,10 +1074,259 @@
       });
     }
 
-    // Initial render of current workout (empty)
+    // ---------- HISTORY ----------
+    function renderHistory() {
+      if (!sessions.length) {
+        historyList.innerHTML = `<p class="small">No sessions logged yet.</p>`;
+        return;
+      }
+
+      const sorted = [...sessions].sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      historyList.innerHTML = sorted
+        .map(s => {
+          const date = new Date(s.date);
+          const routine = ROUTINES.find(r => r.id === s.routineId);
+          const routineName = routine ? routine.name : "Unknown routine";
+          const exercisesSummary = s.exercises
+            .map(e => e.name)
+            .join(", ");
+          const notes = s.notes ? s.notes : "";
+
+          return `
+            <div class="history-item">
+              <div class="history-header">
+                <div>
+                  <strong>${s.label}</strong>
+                  <div class="history-meta">
+                    ${date.toLocaleDateString()} · ${routineName}
+                  </div>
+                </div>
+                <button class="btn-danger small" data-delete-id="${s.id}">🗑</button>
+              </div>
+              <div class="history-meta">Exercises: ${exercisesSummary || "None"}</div>
+              ${
+                notes
+                  ? `<div class="history-notes"><strong>Notes:</strong> ${notes}</div>`
+                  : ""
+              }
+              <details class="small" style="margin-top:4px;">
+                <summary>View sets</summary>
+                ${s.exercises
+                  .map(ex => {
+                    const setsText = ex.sets
+                      .map(
+                        st =>
+                          `${st.weight.toFixed(1)} kg × ${st.reps} (RIR ${st.rir})`
+                      )
+                      .join("<br/>");
+                    return `<div style="margin-top:4px;">
+                      <strong>${ex.name}</strong><br/>
+                      ${setsText}
+                    </div>`;
+                  })
+                  .join("")}
+              </details>
+            </div>
+          `;
+        })
+        .join("");
+
+      // hook up delete buttons
+      historyList.querySelectorAll("[data-delete-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-delete-id");
+          if (!confirm("Delete this session permanently?")) return;
+          sessions = sessions.filter(s => s.id !== id);
+          saveSessions();
+          renderHistory();
+          renderSuggestions();
+          buildChartExerciseOptions();
+          renderChart();
+        });
+      });
+    }
+
+    // ---------- CHARTS ----------
+    function buildChartExerciseOptions() {
+      const namesSet = new Set();
+      sessions.forEach(s =>
+        s.exercises.forEach(e => namesSet.add(e.name))
+      );
+
+      const names = Array.from(namesSet).sort();
+      chartExerciseSelect.innerHTML = "";
+
+      if (!names.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No exercises logged yet";
+        chartExerciseSelect.appendChild(opt);
+        chartExerciseSelect.disabled = true;
+        return;
+      }
+
+      chartExerciseSelect.disabled = false;
+      names.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        chartExerciseSelect.appendChild(opt);
+      });
+
+      chartExerciseSelect.removeEventListener("change", renderChart);
+      chartExerciseSelect.addEventListener("change", renderChart);
+    }
+
+    function renderChart() {
+      const canvas = document.getElementById("exerciseChart");
+      if (!canvas || !sessions.length) return;
+      const ctx = canvas.getContext("2d");
+
+      const exerciseName = chartExerciseSelect.value;
+      if (!exerciseName) {
+        if (exerciseChart) {
+          exerciseChart.destroy();
+          exerciseChart = null;
+        }
+        return;
+      }
+
+      const points = [];
+
+      sessions
+        .filter(s =>
+          s.exercises.some(
+            e => e.name.toLowerCase() === exerciseName.toLowerCase()
+          )
+        )
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .forEach(s => {
+          const ex = s.exercises.find(
+            e => e.name.toLowerCase() === exerciseName.toLowerCase()
+          );
+          if (!ex) return;
+          const w = dominantWeight(ex.sets);
+          points.push({
+            date: new Date(s.date),
+            weight: w
+          });
+        });
+
+      if (!points.length) {
+        if (exerciseChart) {
+          exerciseChart.destroy();
+          exerciseChart = null;
+        }
+        return;
+      }
+
+      const labels = points.map(p =>
+        p.date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+      );
+      const data = points.map(p => p.weight);
+
+      if (exerciseChart) {
+        exerciseChart.destroy();
+      }
+
+      exerciseChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: `${exerciseName} – top working weight`,
+              data,
+              tension: 0.3,
+              borderWidth: 2,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          plugins: {
+            legend: {
+              labels: {
+                color: "#e5e7eb",
+                font: { size: 11 }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#9ca3af", font: { size: 10 } },
+              grid: { color: "rgba(148,163,184,0.1)" }
+            },
+            y: {
+              ticks: { color: "#9ca3af", font: { size: 10 } },
+              grid: { color: "rgba(148,163,184,0.1)" }
+            }
+          }
+        }
+      });
+    }
+
+    // ---------- IMPORT / EXPORT ----------
+    exportBtn.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(sessions, null, 2)], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "brotherhood-hypertrophy-log.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    importBtn.addEventListener("click", () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (!Array.isArray(data)) {
+            alert("Invalid JSON format – expected an array of sessions.");
+            return;
+          }
+          if (
+            !confirm(
+              "Importing will replace your current log with the file contents. Continue?"
+            )
+          )
+            return;
+          sessions = data;
+          saveSessions();
+          renderHistory();
+          renderSuggestions();
+          buildChartExerciseOptions();
+          renderChart();
+          alert("Import successful.");
+        } catch (err) {
+          console.error(err);
+          alert("Failed to parse JSON file.");
+        }
+      };
+      reader.readAsText(file);
+      // reset input so the same file can be re-imported later if needed
+      importFileInput.value = "";
+    });
+
+    // ---------- INIT ----------
+    initRoutines();
     renderCurrentWorkout();
 
-    // ---------- PWA SERVICE WORKER ----------
+    // ---------- SERVICE WORKER ----------
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
